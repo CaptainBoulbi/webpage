@@ -50,7 +50,7 @@ size_t save_chunk(char* buffer, size_t itemsize, size_t nitems, void* ignore){
     memset(&pageChunk[nbchunck], 0, pageChunkLen - nbchunck);
   }
 
-  pageChunk[nbchunck] = malloc(bytes);
+  pageChunk[nbchunck] = malloc(bytes+1);
   pageChunk[nbchunck][bytes] = '\0';
   strncpy(pageChunk[nbchunck], buffer, bytes);
   nbchunck++;
@@ -79,7 +79,6 @@ void getPage(void){
 void printPage(void){
   for (int i=0; i<nbchunck; i++){
     printf("%s", pageChunk[i]);
-    //printf("%d - %p\n", i, pageChunk[i]);
   }
 }
 
