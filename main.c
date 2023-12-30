@@ -59,6 +59,12 @@ size_t save_chunk(char* buffer, size_t itemsize, size_t nitems, void* ignore){
 }
 
 void getPage(void){
+  pageChunk = malloc(sizeof(*pageChunk) * DEFAULT_PAGE_LEN);
+  if (pageChunk == NULL){
+    perror("ERROR: Buy more ram.\n");
+    exit(1);
+  }
+
   CURL* curl = curl_easy_init();
   if (curl == NULL){
     perror("ERROR: curl init failed.\n");
@@ -83,10 +89,8 @@ void printPage(void){
 }
 
 int main(int argc, char* argv[]){
-  pageChunk = malloc(sizeof(*pageChunk) * DEFAULT_PAGE_LEN);
 
   getUserConfig(argc, argv);
-
   getPage();
 
   printPage();
