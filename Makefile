@@ -1,17 +1,18 @@
-SRC=main.c
 BIN=webpage
+SRCS=main.c config.c page.c
+INC=.
 LIB=curl
 FLAGS=-Wall -Wextra -Og -g
 
 all: $(BIN)
 
-$(BIN) : $(SRC)
-	gcc $(FLAGS) -o $(BIN) $(SRC) -l$(LIB)
+$(BIN) : $(SRCS)
+	gcc $(FLAGS) -o $(BIN) $(SRCS) -I$(INC) -l$(LIB)
 
 run : $(BIN)
 	./$(BIN) $(input)
 
 clean :
-	rm $(BIN)
+	rm -f $(BIN) *.o
 
 .PHONY : run clean

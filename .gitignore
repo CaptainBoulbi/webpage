@@ -3,3 +3,4 @@ out
 test.sh
 test.c
 a.out
+*.o
