@@ -1,10 +1,20 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <openssl/ssl.h>
 #include <string.h>
 
 char page[1024];
+
+typedef struct UserConfig {
+  int port;
+  int addr;
+} UserConfig;
+UserConfig config = {
+  .port = 443,
+  .addr = 0x08080808,
+};
 
 void getPage(void){
   int sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -15,8 +25,8 @@ void getPage(void){
 
   struct sockaddr_in addr = {
     .sin_family = AF_INET,
-    .sin_port = htons(443),
-    .sin_addr = htonl(0x08080808)
+    .sin_port = htons(config.port),
+    .sin_addr = htonl(config.addr),
   };
 
   if (connect(sockfd, (const struct sockaddr*)&addr, sizeof(addr)) == -1){
@@ -58,11 +68,29 @@ void getPage(void){
   strcpy(page, buffer);
 }
 
-int main(){
+void getUserConfig(int argc, char* argv[]){
+  for (int i=1; i<argc; i++){
+    if (strcmp(argv[i], "-p") == 0){
+      if (argc <= (i+1)){
+        perror("ERROR: Port not defined by user");
+        exit(1);
+      }
+      config.port = atoi(argv[++i]);
+    } else {
+      config.addr = atoi(argv[i]);
+    }
+  }
+}
+
+int main(int argc, char* argv[]){
+
+  getUserConfig(argc, argv);
+
+  printf("conf: port = %d - addr = %d\n", config.port, config.addr);
 
   getPage();
 
-  printf("Web Page:\n%s\n", page);
+  puts(page);
 
   return 0;
 }

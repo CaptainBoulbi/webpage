@@ -9,7 +9,7 @@ $(BIN) : $(SRC)
 	gcc $(FLAGS) -o $(BIN) $(SRC) -l$(LIB)
 
 run : $(BIN)
-	./$(BIN)
+	./$(BIN) $(input)
 
 clean :
 	rm $(BIN)
