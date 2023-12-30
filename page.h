@@ -5,6 +5,7 @@
 #include <string.h>
 #include <curl/curl.h>
 
+#include "config.h"
 
 #define DEFAULT_PAGE_LEN 16
 
