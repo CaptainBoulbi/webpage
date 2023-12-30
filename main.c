@@ -8,6 +8,7 @@
 #define DEFAULT_PAGE_LEN 16
 
 int pageChunkLen = DEFAULT_PAGE_LEN;
+int nbchunck = 0;
 char** pageChunk;
 
 typedef struct UserConfig {
@@ -36,24 +37,23 @@ void getUserConfig(int argc, char* argv[]){
 
 size_t save_chunk(char* buffer, size_t itemsize, size_t nitems, void* ignore){
   size_t bytes = itemsize * nitems;
-  static int nbchuck = 0;
 
-  if (nbchuck >= pageChunkLen){
+  if (nbchunck >= pageChunkLen){
     pageChunkLen *= 1.5;
     pageChunk = realloc(pageChunk, sizeof(*pageChunk) * pageChunkLen);
-
-    printf("len = %d\n", pageChunkLen);
 
     if (pageChunk == NULL){
       perror("ERROR: Buy more ram.\n");
       exit(1);
     }
+
+    memset(&pageChunk[nbchunck], 0, pageChunkLen - nbchunck);
   }
 
-  pageChunk[nbchuck] = malloc(bytes);
-  pageChunk[nbchuck][bytes] = '\0';
-  strncpy(pageChunk[nbchuck], buffer, bytes);
-  nbchuck++;
+  pageChunk[nbchunck] = malloc(bytes);
+  pageChunk[nbchunck][bytes] = '\0';
+  strncpy(pageChunk[nbchunck], buffer, bytes);
+  nbchunck++;
 
   return bytes;
 }
@@ -77,8 +77,9 @@ void getPage(void){
 }
 
 void printPage(void){
-  for (int i=0; i<pageChunkLen && pageChunk[i] != NULL; i++){
+  for (int i=0; i<nbchunck; i++){
     printf("%s", pageChunk[i]);
+    //printf("%d - %p\n", i, pageChunk[i]);
   }
 }
 
