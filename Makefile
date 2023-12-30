@@ -1,7 +1,7 @@
 SRC=main.c
 BIN=webpage
-LIB=ssl
-FLAGS=-Wall -Wextra
+LIB=curl
+FLAGS=-Wall -Wextra -Og -g
 
 all: $(BIN)
 

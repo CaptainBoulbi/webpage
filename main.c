@@ -1,72 +1,22 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <openssl/ssl.h>
 #include <string.h>
+#include <curl/curl.h>
 
-char page[1024];
+#define DEFAULT_PAGE_LEN 4
+
+int pageChunkLen = DEFAULT_PAGE_LEN;
+char** pageChunk;
 
 typedef struct UserConfig {
   int port;
-  int addr;
+  char* addr;
 } UserConfig;
+
 UserConfig config = {
   .port = 443,
-  .addr = 0x08080808,
+  .addr = "https://github.com/CaptainBoulbi/webpage",
 };
-
-void getPage(void){
-  int sockfd = socket(AF_INET, SOCK_STREAM, 0);
-  if (sockfd == -1){
-    perror("ERROR: Could not create socket.\n");
-    exit(-1);
-  }
-
-  struct sockaddr_in addr = {
-    .sin_family = AF_INET,
-    .sin_port = htons(config.port),
-    .sin_addr = htonl(config.addr),
-  };
-
-  if (connect(sockfd, (const struct sockaddr*)&addr, sizeof(addr)) == -1){
-    perror("ERROR: Could not connect.\n");
-    exit(-1);
-  }
-
-  SSL_CTX* ctx = SSL_CTX_new(TLS_method());
-  if (ctx == NULL){
-    perror("ERROR: Could not create SSL_CTX object.\n");
-    exit(-1);
-  }
-  SSL* ssl = SSL_new(ctx);
-  if (ssl == NULL){
-    perror("ERROR: Could not create SSL structure.\n");
-    exit(-1);
-  }
-  if (SSL_set_fd(ssl, sockfd) != 1){
-    perror("ERROR: Could not connect SSL object file descriptor.\n");
-    exit(-1);
-  }
-  if (SSL_connect(ssl) != 1){
-    perror("ERROR: Could not initiate TLS/SSL connection.\n");
-    exit(-1);
-  }
-
-  char* request = "GET /\r\n\r\n";
-  if (SSL_write(ssl, request, strlen(request)) <= 0){
-    perror("ERROR: Could not send request.\n");
-    exit(-1);
-  }
-  char buffer[1024] = {0};
-  int readbyte = SSL_read(ssl, buffer, 1023);
-  if (readbyte <= 0){
-    perror("ERROR: Could not read from connection.\n");
-    exit(-1);
-  }
-
-  strcpy(page, buffer);
-}
 
 void getUserConfig(int argc, char* argv[]){
   for (int i=1; i<argc; i++){
@@ -77,20 +27,68 @@ void getUserConfig(int argc, char* argv[]){
       }
       config.port = atoi(argv[++i]);
     } else {
-      config.addr = atoi(argv[i]);
+      config.addr = argv[i];
     }
   }
 }
 
+size_t save_chunk(char* buffer, size_t itemsize, size_t nitems, void* ingore){
+  size_t bytes = itemsize * nitems;
+  static int nbchuck = 0;
+
+  if (nbchuck >= pageChunkLen){
+    pageChunkLen = (nbchuck+1) * 1.5;
+    pageChunk = realloc(pageChunk, sizeof(*pageChunk)*pageChunkLen);
+    if (pageChunk == NULL){
+      perror("ERROR: Buy more ram.\n");
+      exit(1);
+    }
+  }
+  pageChunk[nbchuck] = malloc(bytes);
+
+  strncpy(pageChunk[nbchuck], buffer, bytes);
+  pageChunk[nbchuck][bytes] = '\0';
+  nbchuck++;
+
+  return bytes;
+}
+
+void getPage(void){
+  CURL* curl = curl_easy_init();
+  if (curl == NULL){
+    perror("ERROR: curl init failed.\n");
+    exit(1);
+  }
+
+  curl_easy_setopt(curl, CURLOPT_URL, config.addr);
+  curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, save_chunk);
+
+  CURLcode result = curl_easy_perform(curl);
+  if (result != CURLE_OK){
+    fprintf(stderr, "ERROR: %s\n", curl_easy_strerror(result));
+  }
+
+  curl_easy_cleanup(curl);
+}
+
+void printPage(void){
+  int i=0;
+  for (i=0; i<pageChunkLen && pageChunk[i] != NULL; i++){
+    printf("%s", pageChunk[i]);
+  }
+  printf("%d chunks\n", i);
+}
+
 int main(int argc, char* argv[]){
+  pageChunk = malloc(sizeof(*pageChunk) * DEFAULT_PAGE_LEN);
 
   getUserConfig(argc, argv);
 
-  printf("conf: port = %d - addr = %d\n", config.port, config.addr);
-
   getPage();
 
-  puts(page);
+  printPage();
+
+  printf("chunk len = %d\n", pageChunkLen);
 
   return 0;
 }
