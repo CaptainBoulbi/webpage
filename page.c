@@ -43,6 +43,7 @@ void getPage(void){
   }
 
   curl_easy_setopt(curl, CURLOPT_URL, config.addr);
+  curl_easy_setopt(curl, CURLOPT_PORT, config.port);
   curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, save_chunk);
 
   CURLcode result = curl_easy_perform(curl);
