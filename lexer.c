@@ -8,6 +8,7 @@ Cursor cursor = {
 };
 
 char* nextchar(void){
+  if (cursor.chunk >= page.len) return NULL;
   if (page.chunks[cursor.chunk][cursor.offset+1] == '\0'){
     cursor.chunk++;
     cursor.offset = 0;
@@ -34,9 +35,11 @@ Token* nexttoken(void){
   */
 
   puts("");
-  for (int i=0; i<200; i++){
-    printf("%c", *nextchar());
-  }
+  char* c = nextchar();
+  do {
+    printf("%c", *c);
+    c = nextchar();
+  } while (c != NULL);
   puts("");
 
   return token;
