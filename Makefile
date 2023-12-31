@@ -1,5 +1,5 @@
 BIN=webpage
-SRCS=main.c config.c page.c
+SRCS=main.c config.c page.c lexer.c
 INC=.
 LIB=curl
 FLAGS=-Wall -Wextra -Og -g
