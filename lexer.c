@@ -8,15 +8,16 @@ Cursor cursor = {
 };
 
 char* nextchar(void){
-  if (cursor.chunk >= page.len){
-    return NULL;
-  }
   if (page.chunks[cursor.chunk][cursor.offset+1] == '\0'){
     cursor.chunk++;
     cursor.offset = 0;
   } else {
     cursor.offset++;
   } 
+
+  if (cursor.chunk >= page.len){
+    return NULL;
+  }
 
   return &page.chunks[cursor.chunk][cursor.offset];
 }
