@@ -17,8 +17,6 @@ size_t save_chunk(char* buffer, size_t itemsize, size_t nitems, void* ignore){
       perror("ERROR: Buy more ram.\n");
       exit(1);
     }
-
-    memset(&page.chunks[page.len], 0, page.cap - page.len);
   }
 
   page.chunks[page.len] = malloc(bytes+1);
