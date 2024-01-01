@@ -3,6 +3,9 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+
+#include "page.h"
 
 typedef enum TokenType {
   NO_TYPE,
