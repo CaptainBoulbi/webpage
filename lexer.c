@@ -8,13 +8,15 @@ Cursor cursor = {
 };
 
 char* nextchar(void){
-  if (cursor.chunk >= page.len) return NULL;
+  if (cursor.chunk >= page.len){
+    return NULL;
+  }
   if (page.chunks[cursor.chunk][cursor.offset+1] == '\0'){
     cursor.chunk++;
     cursor.offset = 0;
   } else {
     cursor.offset++;
-  }
+  } 
 
   return &page.chunks[cursor.chunk][cursor.offset];
 }
@@ -22,17 +24,6 @@ char* nextchar(void){
 Token* nexttoken(void){
   Token* token = malloc(sizeof(Token));
   token->type = NO_TYPE;
-
-  /*
-  while (nextchar() == '<');
-
-  char c = '\0';
-  do {
-    c = nextchar();
-    printf("%c", c);;
-  } while (c != '>');
-  puts("");
-  */
 
   puts("");
   char* c = nextchar();
