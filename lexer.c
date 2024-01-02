@@ -1,17 +1,40 @@
 #include "lexer.h"
 
+#define HTML_BALISE_LEN 12
+
+typedef struct Cursor {
+  int chunk;
+  int offset;
+} Cursor;
+
 Cursor cursor = {
   .chunk = 0,
-  .offset = 0,
+  .offset = -1,
 };
 
-char* nextchar(void){
-  if (page.chunks[cursor.chunk][cursor.offset+1] == '\0'){
-    cursor.chunk++;
-    cursor.offset = 0;
+Cursor prev = {
+  .chunk = 0,
+  .offset = -2,
+};
+
+void increment_cursor(Cursor* cur){
+  if (cur->offset+1 < 0){
+    printf("init prev cursor.\n");
+    cur->offset++;
+    return;
+  }
+
+  if (page.chunks[cur->chunk][cur->offset+1] == '\0'){
+    cur->chunk++;
+    cur->offset = 0;
   } else {
-    cursor.offset++;
-  } 
+    cur->offset++;
+  }
+}
+
+char* nextchar(void){
+  increment_cursor(&cursor);
+  increment_cursor(&prev);
 
   if (cursor.chunk >= page.len){
     return NULL;
@@ -20,48 +43,111 @@ char* nextchar(void){
   return &page.chunks[cursor.chunk][cursor.offset];
 }
 
-char* HTMLbalise(void){
-  return NULL;
+void go_back(void){
+  cursor.chunk = prev.chunk;
+  cursor.offset = prev.offset;
+  prev.offset--;
+
+  printf("got back mf.\n");
+
+  if (cursor.chunk < 0 || cursor.offset < 0){
+    printf("chunk = %d | offset= %d\n", cursor.chunk, cursor.offset);
+    puts("ERROR: go way too back.");
+    exit(1);
+  }
+}
+
+TokenType token_by_name(const char name[HTML_BALISE_LEN]){
+  if (name == NULL){
+    return UNDEFINED_TYPE;
+  } else if (strncmp(name, "body", HTML_BALISE_LEN) == 0){
+    return BODY;
+  } else if (strncmp(name, "/body", HTML_BALISE_LEN) == 0){
+    return END_BODY;
+  } else if (strncmp(name, "ul", HTML_BALISE_LEN) == 0){
+    return UL;
+  } else if (strncmp(name, "li", HTML_BALISE_LEN) == 0){
+    return LI;
+  } else if (strncmp(name, "h1", HTML_BALISE_LEN) == 0){
+    return H1;
+  } else if (strncmp(name, "h2", HTML_BALISE_LEN) == 0){
+    return H2;
+  } else if (strncmp(name, "h3", HTML_BALISE_LEN) == 0){
+    return H3;
+  } else if (strncmp(name, "h4", HTML_BALISE_LEN) == 0){
+    return H4;
+  } else if (strncmp(name, "h5", HTML_BALISE_LEN) == 0){
+    return H5;
+  } else if (strncmp(name, "h6", HTML_BALISE_LEN) == 0){
+    return H6;
+  }
+
+  return DONT_CARE;
 }
 
 Token* nexttoken(void){
-  Token* token = malloc(sizeof(Token));
-  token->value = NULL;
+  Token* token = NULL;
+  static char* cursor = NULL;
+  cursor = nextchar();
 
-  char* word = HTMLbalise();
-  if (word == NULL){
-    token->type = NO_TYPE;
-  } else if (strcmp(word, "body") == 0){
-    token->type = BODY;
-  } else if (strcmp(word, "/body") == 0){
-    token->type = END_BODY;
-  } else if (strcmp(word, "ul") == 0){
-    token->type = UL;
-  } else if (strcmp(word, "li") == 0){
-    token->type = LI;
-  } else if (strcmp(word, "h1") == 0){
-    token->type = H1;
-  } else if (strcmp(word, "h2") == 0){
-    token->type = H2;
-  } else if (strcmp(word, "h3") == 0){
-    token->type = H3;
-  } else if (strcmp(word, "h4") == 0){
-    token->type = H4;
-  } else if (strcmp(word, "h5") == 0){
-    token->type = H5;
-  } else if (strcmp(word, "h6") == 0){
-    token->type = H6;
-  } else {
-    token->type = NO_TYPE;
+  while (*cursor == '\n'){
+    printf("new line skipped.\n");
+    cursor = nextchar();
+  }
+
+  if (*cursor != '<'){
+    int i = 0;
+
+    do {
+      cursor = nextchar();
+      i++;
+      printf("text: '%c'.\n", *cursor);
+    } while (*cursor != '<');
+    go_back();
+
+    token = malloc(sizeof(Token));
+    token->type = TEXT;
+    token->value = "TODO";
+    token->len = i;
+  } else if (*cursor == '<'){
+    char balise[HTML_BALISE_LEN] = {0};
+    int len = 0;
+
+    cursor = nextchar();
+    while (*cursor != '>' && *cursor != ' ' && len < HTML_BALISE_LEN){
+      balise[len] = *cursor;
+      len++;
+      printf("balise: '%c'.\n", *cursor);
+      cursor = nextchar();
+    }
+
+    token = malloc(sizeof(Token));
+    token->type = token_by_name(balise);
+    token->value = malloc(sizeof(char) * len);
+    strncpy(token->value, balise, len+1);
+    token->len = len;
+
+    do {
+      cursor = nextchar();
+      printf("skip: '%c'.\n", *cursor);
+    } while (*cursor != '>');
   }
 
   return token;
 }
 
 void printtoken(Token* token){
+  if (token == NULL){
+    puts("NULL TOKEN");
+    return;
+  }
+
   switch (token->type) {
-    case NO_TYPE:
-      printf("NO_TYPE: ");
+    case UNDEFINED_TYPE:
+      printf("UNDEFINED_TYPE: ");
+      break;
+    case DONT_CARE:
+      printf("DONT_CARE: ");
       break;
     case TEXT:
       printf("TEXT: ");
@@ -97,14 +183,27 @@ void printtoken(Token* token){
       printf("H6: ");
       break;
     default:
-      printf("UNDEFINED TOKEN: ");
+      printf("ERROR: UNKNOWN TOKEN: ");
       break;
   }
 
   if (token->value == NULL){
-    puts("NO VALUE FOUND");
+    puts("'NO VALUE FOUND'");
     return;
   }
 
-  printf("%s\n", token->value);
+  printf("'%s'\n", token->value);
 }
+
+#if 0
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>https://n3m0.fr/fr/</title>
+    <link rel="canonical" href="https://n3m0.fr/fr/">
+    <meta name="robots" content="noindex">
+    <meta charset="utf-8">
+    <meta http-equiv="refresh" content="0; url=https://n3m0.fr/fr/">
+  </head>
+</html>
+#endif

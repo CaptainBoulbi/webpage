@@ -2,7 +2,7 @@ BIN=webpage
 SRCS=main.c config.c page.c lexer.c
 INC=.
 LIB=curl
-FLAGS=-Wall -Wextra -Og -g
+FLAGS=-Wall -Wextra -Og -g -ggdb -fvar-tracking
 
 all: $(BIN)
 

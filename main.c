@@ -9,12 +9,13 @@ int main(int argc, char* argv[]){
 
   printPage();
 
-  Token* token;
-  do{
+  Token* token = NULL;
+  do {
     token = nexttoken();
     printtoken(token);
-    //parse(token);
-  } while (token->type != NO_TYPE);
+  } while (token != NULL && token->type != UNDEFINED_TYPE);
+
+  //parse(token);
 
   return 0;
 }

@@ -8,7 +8,8 @@
 #include "page.h"
 
 typedef enum TokenType {
-  NO_TYPE,
+  UNDEFINED_TYPE,
+  DONT_CARE,
   TEXT,
   BODY,
   END_BODY,
@@ -19,12 +20,8 @@ typedef enum TokenType {
 typedef struct Token {
   TokenType type;
   char* value;
+  int len;
 } Token;
-
-typedef struct Cursor {
-  int chunk;
-  int offset;
-} Cursor;
 
 Token* nexttoken(void);
 
