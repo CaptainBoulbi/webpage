@@ -7,15 +7,12 @@ int main(int argc, char* argv[]){
   getUserConfig(argc, argv);
   getPage();
 
-  printPage();
-
   Token* token = NULL;
   do {
     token = nexttoken();
     printtoken(token);
-  } while (token != NULL && token->type != UNDEFINED_TYPE);
-
-  //parse(token);
+    //evaluate(token);
+  } while (token != NULL && token->type != END_HTML);
 
   return 0;
 }

@@ -17,11 +17,10 @@ Cursor prev = {
   .offset = -2,
 };
 
-void increment_cursor(Cursor* cur){
+int increment_cursor(Cursor* cur){
   if (cur->offset+1 < 0){
-    printf("init prev cursor.\n");
     cur->offset++;
-    return;
+    return 0;
   }
 
   if (page.chunks[cur->chunk][cur->offset+1] == '\0'){
@@ -30,11 +29,18 @@ void increment_cursor(Cursor* cur){
   } else {
     cur->offset++;
   }
+
+  if (cur->chunk >= page.len){
+    return -1;
+  }
+
+  return 0;
 }
 
 char* nextchar(void){
-  increment_cursor(&cursor);
-  increment_cursor(&prev);
+  if (increment_cursor(&cursor) < 0 || increment_cursor(&prev) < 0){
+    return NULL;
+  }
 
   if (cursor.chunk >= page.len){
     return NULL;
@@ -48,10 +54,7 @@ void go_back(void){
   cursor.offset = prev.offset;
   prev.offset--;
 
-  printf("got back mf.\n");
-
   if (cursor.chunk < 0 || cursor.offset < 0){
-    printf("chunk = %d | offset= %d\n", cursor.chunk, cursor.offset);
     puts("ERROR: go way too back.");
     exit(1);
   }
@@ -64,6 +67,14 @@ TokenType token_by_name(const char name[HTML_BALISE_LEN]){
     return BODY;
   } else if (strncmp(name, "/body", HTML_BALISE_LEN) == 0){
     return END_BODY;
+  } else if (strncmp(name, "html", HTML_BALISE_LEN) == 0){
+    return HTML;
+  } else if (strncmp(name, "/html", HTML_BALISE_LEN) == 0){
+    return END_HTML;
+  } else if (strncmp(name, "a", HTML_BALISE_LEN) == 0){
+    return A;
+  } else if (strncmp(name, "/a", HTML_BALISE_LEN) == 0){
+    return END_A;
   } else if (strncmp(name, "ul", HTML_BALISE_LEN) == 0){
     return UL;
   } else if (strncmp(name, "li", HTML_BALISE_LEN) == 0){
@@ -90,8 +101,9 @@ Token* nexttoken(void){
   static char* cursor = NULL;
   cursor = nextchar();
 
-  while (*cursor == '\n'){
-    printf("new line skipped.\n");
+  if (cursor == NULL) return NULL;
+
+  while (*cursor == '\0' || *cursor == ' ' || *cursor == '\n' || *cursor == '\t'){
     cursor = nextchar();
   }
 
@@ -101,7 +113,6 @@ Token* nexttoken(void){
     do {
       cursor = nextchar();
       i++;
-      printf("text: '%c'.\n", *cursor);
     } while (*cursor != '<');
     go_back();
 
@@ -117,7 +128,6 @@ Token* nexttoken(void){
     while (*cursor != '>' && *cursor != ' ' && len < HTML_BALISE_LEN){
       balise[len] = *cursor;
       len++;
-      printf("balise: '%c'.\n", *cursor);
       cursor = nextchar();
     }
 
@@ -127,9 +137,9 @@ Token* nexttoken(void){
     strncpy(token->value, balise, len+1);
     token->len = len;
 
+    go_back();
     do {
       cursor = nextchar();
-      printf("skip: '%c'.\n", *cursor);
     } while (*cursor != '>');
   }
 
@@ -157,6 +167,18 @@ void printtoken(Token* token){
       break;
     case END_BODY:
       printf("END_BODY: ");
+      break;
+    case HTML:
+      printf("HTML: ");
+      break;
+    case END_HTML:
+      printf("END_HTML: ");
+      break;
+    case A:
+      printf("A: ");
+      break;
+    case END_A:
+      printf("END_A: ");
       break;
     case UL:
       printf("UL: ");
