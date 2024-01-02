@@ -12,7 +12,7 @@ int main(int argc, char* argv[]){
     token = nexttoken();
     printtoken(token);
     //evaluate(token);
-  } while (token != NULL && token->type != END_HTML);
+  } while (token != NULL && token->type != END_BODY);
 
   return 0;
 }

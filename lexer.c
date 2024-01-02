@@ -17,6 +17,77 @@ Cursor prev = {
   .offset = -2,
 };
 
+void printtoken(Token* token){
+  if (token == NULL){
+    puts("NULL TOKEN");
+    return;
+  }
+
+  switch (token->type) {
+    case UNDEFINED_TYPE:
+      printf("UNDEFINED_TYPE: ");
+      break;
+    case DONT_CARE:
+      printf("DONT_CARE: ");
+      break;
+    case TEXT:
+      printf("TEXT: ");
+      break;
+    case BODY:
+      printf("BODY: ");
+      break;
+    case END_BODY:
+      printf("END_BODY: ");
+      break;
+    case HTML:
+      printf("HTML: ");
+      break;
+    case END_HTML:
+      printf("END_HTML: ");
+      break;
+    case A:
+      printf("A: ");
+      break;
+    case END_A:
+      printf("END_A: ");
+      break;
+    case UL:
+      printf("UL: ");
+      break;
+    case LI:
+      printf("LI: ");
+      break;
+    case H1:
+      printf("H1: ");
+      break;
+    case H2:
+      printf("H2: ");
+      break;
+    case H3:
+      printf("H3: ");
+      break;
+    case H4:
+      printf("H4: ");
+      break;
+    case H5:
+      printf("H5: ");
+      break;
+    case H6:
+      printf("H6: ");
+      break;
+    default:
+      printf("ERROR: UNKNOWN TOKEN: ");
+      break;
+  }
+
+  if (token->value == NULL){
+    puts("'NO VALUE FOUND'");
+    return;
+  }
+
+  printf("'%s'\n", token->value);
+}
+
 int increment_cursor(Cursor* cursor){
   if (cursor->offset+1 < 0){
     cursor->offset++;
@@ -96,7 +167,7 @@ TokenType token_by_name(const char name[HTML_BALISE_LEN]){
   return DONT_CARE;
 }
 
-void create_text_token(Token* token, char* cursor){
+Token* create_text_token(Token* token, char* cursor){
   int i = 0;
 
   do {
@@ -109,9 +180,11 @@ void create_text_token(Token* token, char* cursor){
   token->type = TEXT;
   token->value = "TODO";
   token->len = i;
+
+  return token;
 }
 
-void create_balise_token(Token* token, char* cursor){
+Token* create_balise_token(Token* token, char* cursor){
   char balise[HTML_BALISE_LEN] = {0};
   int len = 0;
 
@@ -132,6 +205,8 @@ void create_balise_token(Token* token, char* cursor){
   do {
     cursor = nextchar();
   } while (*cursor != '>');
+
+  return token;
 }
 
 Token* nexttoken(void){
@@ -146,81 +221,10 @@ Token* nexttoken(void){
   }
 
   if (*cursor != '<'){
-    create_text_token(token, cursor);
+    token = create_text_token(token, cursor);
   } else if (*cursor == '<'){
-    create_balise_token(token, cursor);
+    token = create_balise_token(token, cursor);
   }
 
   return token;
-}
-
-void printtoken(Token* token){
-  if (token == NULL){
-    puts("NULL TOKEN");
-    return;
-  }
-
-  switch (token->type) {
-    case UNDEFINED_TYPE:
-      printf("UNDEFINED_TYPE: ");
-      break;
-    case DONT_CARE:
-      printf("DONT_CARE: ");
-      break;
-    case TEXT:
-      printf("TEXT: ");
-      break;
-    case BODY:
-      printf("BODY: ");
-      break;
-    case END_BODY:
-      printf("END_BODY: ");
-      break;
-    case HTML:
-      printf("HTML: ");
-      break;
-    case END_HTML:
-      printf("END_HTML: ");
-      break;
-    case A:
-      printf("A: ");
-      break;
-    case END_A:
-      printf("END_A: ");
-      break;
-    case UL:
-      printf("UL: ");
-      break;
-    case LI:
-      printf("LI: ");
-      break;
-    case H1:
-      printf("H1: ");
-      break;
-    case H2:
-      printf("H2: ");
-      break;
-    case H3:
-      printf("H3: ");
-      break;
-    case H4:
-      printf("H4: ");
-      break;
-    case H5:
-      printf("H5: ");
-      break;
-    case H6:
-      printf("H6: ");
-      break;
-    default:
-      printf("ERROR: UNKNOWN TOKEN: ");
-      break;
-  }
-
-  if (token->value == NULL){
-    puts("'NO VALUE FOUND'");
-    return;
-  }
-
-  printf("'%s'\n", token->value);
 }
