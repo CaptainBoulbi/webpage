@@ -7,7 +7,7 @@ typedef struct Cursor {
   int offset;
 } Cursor;
 
-Cursor cursor = {
+Cursor curr = {
   .chunk = 0,
   .offset = -1,
 };
@@ -17,20 +17,20 @@ Cursor prev = {
   .offset = -2,
 };
 
-int increment_cursor(Cursor* cur){
-  if (cur->offset+1 < 0){
-    cur->offset++;
+int increment_cursor(Cursor* cursor){
+  if (cursor->offset+1 < 0){
+    cursor->offset++;
     return 0;
   }
 
-  if (page.chunks[cur->chunk][cur->offset+1] == '\0'){
-    cur->chunk++;
-    cur->offset = 0;
+  if (page.chunks[cursor->chunk][cursor->offset+1] == '\0'){
+    cursor->chunk++;
+    cursor->offset = 0;
   } else {
-    cur->offset++;
+    cursor->offset++;
   }
 
-  if (cur->chunk >= page.len){
+  if (cursor->chunk >= page.len){
     return -1;
   }
 
@@ -38,23 +38,23 @@ int increment_cursor(Cursor* cur){
 }
 
 char* nextchar(void){
-  if (increment_cursor(&cursor) < 0 || increment_cursor(&prev) < 0){
+  if (increment_cursor(&curr) < 0 || increment_cursor(&prev) < 0){
     return NULL;
   }
 
-  if (cursor.chunk >= page.len){
+  if (curr.chunk >= page.len){
     return NULL;
   }
 
-  return &page.chunks[cursor.chunk][cursor.offset];
+  return &page.chunks[curr.chunk][curr.offset];
 }
 
 void go_back(void){
-  cursor.chunk = prev.chunk;
-  cursor.offset = prev.offset;
+  curr.chunk = prev.chunk;
+  curr.offset = prev.offset;
   prev.offset--;
 
-  if (cursor.chunk < 0 || cursor.offset < 0){
+  if (curr.chunk < 0 || curr.offset < 0){
     puts("ERROR: go way too back.");
     exit(1);
   }
@@ -96,6 +96,44 @@ TokenType token_by_name(const char name[HTML_BALISE_LEN]){
   return DONT_CARE;
 }
 
+void create_text_token(Token* token, char* cursor){
+  int i = 0;
+
+  do {
+    cursor = nextchar();
+    i++;
+  } while (*cursor != '<');
+  go_back();
+
+  token = malloc(sizeof(Token));
+  token->type = TEXT;
+  token->value = "TODO";
+  token->len = i;
+}
+
+void create_balise_token(Token* token, char* cursor){
+  char balise[HTML_BALISE_LEN] = {0};
+  int len = 0;
+
+  cursor = nextchar();
+  while (*cursor != '>' && *cursor != ' ' && *cursor != '\n' && *cursor != '\t' && len < HTML_BALISE_LEN){
+    balise[len] = *cursor;
+    len++;
+    cursor = nextchar();
+  }
+
+  token = malloc(sizeof(Token));
+  token->type = token_by_name(balise);
+  token->value = malloc(sizeof(char) * len);
+  strncpy(token->value, balise, len+1);
+  token->len = len;
+
+  go_back();
+  do {
+    cursor = nextchar();
+  } while (*cursor != '>');
+}
+
 Token* nexttoken(void){
   Token* token = NULL;
   static char* cursor = NULL;
@@ -108,39 +146,9 @@ Token* nexttoken(void){
   }
 
   if (*cursor != '<'){
-    int i = 0;
-
-    do {
-      cursor = nextchar();
-      i++;
-    } while (*cursor != '<');
-    go_back();
-
-    token = malloc(sizeof(Token));
-    token->type = TEXT;
-    token->value = "TODO";
-    token->len = i;
+    create_text_token(token, cursor);
   } else if (*cursor == '<'){
-    char balise[HTML_BALISE_LEN] = {0};
-    int len = 0;
-
-    cursor = nextchar();
-    while (*cursor != '>' && *cursor != ' ' && *cursor != '\n' && *cursor != '\t' && len < HTML_BALISE_LEN){
-      balise[len] = *cursor;
-      len++;
-      cursor = nextchar();
-    }
-
-    token = malloc(sizeof(Token));
-    token->type = token_by_name(balise);
-    token->value = malloc(sizeof(char) * len);
-    strncpy(token->value, balise, len+1);
-    token->len = len;
-
-    go_back();
-    do {
-      cursor = nextchar();
-    } while (*cursor != '>');
+    create_balise_token(token, cursor);
   }
 
   return token;
@@ -216,16 +224,3 @@ void printtoken(Token* token){
 
   printf("'%s'\n", token->value);
 }
-
-#if 0
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <title>https://n3m0.fr/fr/</title>
-    <link rel="canonical" href="https://n3m0.fr/fr/">
-    <meta name="robots" content="noindex">
-    <meta charset="utf-8">
-    <meta http-equiv="refresh" content="0; url=https://n3m0.fr/fr/">
-  </head>
-</html>
-#endif
