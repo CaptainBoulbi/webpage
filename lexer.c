@@ -125,7 +125,7 @@ Token* nexttoken(void){
     int len = 0;
 
     cursor = nextchar();
-    while (*cursor != '>' && *cursor != ' ' && len < HTML_BALISE_LEN){
+    while (*cursor != '>' && *cursor != ' ' && *cursor != '\n' && *cursor != '\t' && len < HTML_BALISE_LEN){
       balise[len] = *cursor;
       len++;
       cursor = nextchar();
