@@ -227,6 +227,32 @@ TokenType token_by_name(const char name[HTML_BALISE_LEN]){
   return DONT_CARE;
 }
 
+char* getParam(const char* word, int len, char* cursor, int* size){
+  do {
+    int succes = 0;
+    for (int i=0; i<len; i++){
+      if (word[i] == *cursor){
+        cursor = nextchar();
+      } else {
+        succes = -1;
+        break;
+      }
+    }
+
+    if (succes != -1){
+      printf("get %s param: ", word);
+      *size = 0;
+      cursor = nextchar();
+      do {
+        printf("%c", *cursor);
+        (*size)++;
+      } while (*cursor != '"');
+      printf(".\n");
+    }
+  } while (*cursor != '>');
+  return NULL;
+}
+
 Token* create_text_token(Token* token, char* cursor){
   int i = 0;
 
@@ -257,11 +283,23 @@ Token* create_balise_token(Token* token, char* cursor){
 
   token = malloc(sizeof(Token));
   token->type = token_by_name(balise);
-  token->value = malloc(sizeof(char) * len);
-  strncpy(token->value, balise, len+1);
   token->len = len;
+  token->value = NULL;
 
   go_back();
+  if (token->type == A){
+    token->value = getParam("href", sizeof("href"), cursor, &token->len);
+  } else if (token->type == IMG){
+    int len, srclen, altlen;
+    char* src = getParam("src", sizeof("src"), cursor, &srclen);
+    char* alt = getParam("alt", sizeof("alt"), cursor, &altlen);
+    len = srclen + altlen;
+
+    token->value = malloc(sizeof(char) * (len + 1));
+    strncat(token->value, src, srclen);
+    strncpy(token->value + srclen + 1, alt, altlen);
+  }
+
   do {
     cursor = nextchar();
   } while (*cursor != '>');
