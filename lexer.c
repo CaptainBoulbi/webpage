@@ -1,4 +1,6 @@
 #include "lexer.h"
+#include <curl/curl.h>
+#include <string.h>
 
 #define HTML_BALISE_LEN 12
 
@@ -73,17 +75,20 @@ void go_back(void){
   prev.offset--;
 
   if (curr.chunk < 0 || curr.offset < 0){
-    puts("ERROR: go way too back.");
+    puts("ERROR: cursor got way too back.");
     exit(1);
   }
 }
 
 char* getParam(const char* word, int len, char* cursor, int* size){
+  printf("looking for '%s' word in %d char.\n", word, len);
   do {
+    printf("cursor: '%c' len: '%d'.\n", *cursor, len);
     int succes = 0;
-    for (int i=0; i<len; i++){
+    for (int i=0; i<len && succes != -1; i++){
       if (word[i] == *cursor){
         cursor = nextchar();
+        succes = 0;
       } else {
         succes = -1;
         break;
@@ -136,15 +141,11 @@ Token* create_balise_token(Token* token, char* cursor){
 
   token = malloc(sizeof(Token));
   token->type = token_by_name(balise);
-  token->len = len;
-  token->value = NULL;
 
-  go_back();
-  /*
   if (token->type == A){
+    printf("cursor status before passing param: '%c'.\n", *cursor);
     token->value = getParam("href", sizeof("href"), cursor, &token->len);
-  } else if (token->type == IMG){
-    /*
+  } /*else if (token->type == IMG){
     int len, srclen, altlen;
     char* src = getParam("src", sizeof("src"), cursor, &srclen);
     char* alt = getParam("alt", sizeof("alt"), cursor, &altlen);
@@ -153,10 +154,15 @@ Token* create_balise_token(Token* token, char* cursor){
     token->value = malloc(sizeof(char) * (len + 1));
     strncat(token->value, src, srclen);
     strncpy(token->value + srclen + 1, alt, altlen);
-    */
-  //}
+  }*/
   //go_back();
+  else {
+    token->value = malloc(sizeof(char) * len);
+    strncpy(token->value, balise, len+1);
+    token->len = len;
+  }
 
+  go_back();
   do {
     cursor = nextchar();
   } while (*cursor != '>');
