@@ -1,6 +1,4 @@
 #include "lexer.h"
-#include <curl/curl.h>
-#include <string.h>
 
 #define HTML_BALISE_LEN 12
 
@@ -81,34 +79,45 @@ void go_back(void){
 }
 
 char* getParam(const char* word, int len, char* cursor, int* size){
-  printf("looking for '%s' word in %d char.\n", word, len);
+  char* res = NULL;
+  int found = 0;
+  len--;
+
   do {
-    printf("cursor: '%c' len: '%d'.\n", *cursor, len);
-    int succes = 0;
-    for (int i=0; i<len && succes != -1; i++){
-      if (word[i] == *cursor){
-        cursor = nextchar();
-        succes = 0;
-      } else {
-        succes = -1;
+    cursor = nextchar();
+    for (int i=0; i<len; i++){
+      if (word[i] != *cursor){
+        found = -1;
         break;
+      } else {
+        found = 1;
+        cursor = nextchar();
       }
     }
 
-    if (succes != -1){
-      printf("get %s param: ", word);
+    if (found == 1){
+      while (*cursor != '"'){
+        cursor = nextchar();
+      }
+
+      char* begin = nextchar();
       *size = 0;
-      cursor = nextchar();
+
       do {
-        printf("%c", *cursor);
+        cursor = nextchar();
         (*size)++;
       } while (*cursor != '"');
-      printf(".\n");
-    }
 
-    cursor = nextchar();
+      res = malloc(sizeof(char) * ((*size)+1));
+      strncpy(res, begin, *size);
+      res[*size] = '\0';
+
+      break;
+    }
   } while (*cursor != '>');
-  return NULL;
+
+
+  return res;
 }
 
 Token* create_text_token(Token* token, char* cursor){
@@ -143,7 +152,6 @@ Token* create_balise_token(Token* token, char* cursor){
   token->type = token_by_name(balise);
 
   if (token->type == A){
-    printf("cursor status before passing param: '%c'.\n", *cursor);
     token->value = getParam("href", sizeof("href"), cursor, &token->len);
   } /*else if (token->type == IMG){
     int len, srclen, altlen;
