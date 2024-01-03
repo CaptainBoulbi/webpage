@@ -23,6 +23,7 @@ void printtoken(Token* token){
     return;
   }
 
+  #if 0
   switch (token->type) {
     case UNDEFINED_TYPE:
       printf("UNDEFINED_TYPE: ");
@@ -38,12 +39,6 @@ void printtoken(Token* token){
       break;
     case END_BODY:
       printf("END_BODY: ");
-      break;
-    case HTML:
-      printf("HTML: ");
-      break;
-    case END_HTML:
-      printf("END_HTML: ");
       break;
     case A:
       printf("A: ");
@@ -79,6 +74,9 @@ void printtoken(Token* token){
       printf("ERROR: UNKNOWN TOKEN: ");
       break;
   }
+  #endif
+
+  printf("%d: ", token->type);
 
   if (token->value == NULL){
     puts("'NO VALUE FOUND'");
@@ -138,18 +136,56 @@ TokenType token_by_name(const char name[HTML_BALISE_LEN]){
     return BODY;
   } else if (strncmp(name, "/body", HTML_BALISE_LEN) == 0){
     return END_BODY;
-  } else if (strncmp(name, "html", HTML_BALISE_LEN) == 0){
-    return HTML;
   } else if (strncmp(name, "/html", HTML_BALISE_LEN) == 0){
     return END_HTML;
+  } else if (strncmp(name, "em", HTML_BALISE_LEN) == 0){
+    return EM;
+  } else if (strncmp(name, "/em", HTML_BALISE_LEN) == 0){
+    return END_EM;
+  } else if (strncmp(name, "i", HTML_BALISE_LEN) == 0){
+    return I;
+  } else if (strncmp(name, "/i", HTML_BALISE_LEN) == 0){
+    return END_I;
+  } else if (strncmp(name, "b", HTML_BALISE_LEN) == 0){
+    return B;
+  } else if (strncmp(name, "/b", HTML_BALISE_LEN) == 0){
+    return END_B;
+  } else if (strncmp(name, "strong", HTML_BALISE_LEN) == 0){
+    return STRONG;
+  } else if (strncmp(name, "/strong", HTML_BALISE_LEN) == 0){
+    return END_STRONG;
+  } else if (strncmp(name, "hr", HTML_BALISE_LEN) == 0){
+    return HR;
+  } else if (strncmp(name, "br", HTML_BALISE_LEN) == 0){
+    return BR;
   } else if (strncmp(name, "a", HTML_BALISE_LEN) == 0){
     return A;
   } else if (strncmp(name, "/a", HTML_BALISE_LEN) == 0){
     return END_A;
+  } else if (strncmp(name, "ol", HTML_BALISE_LEN) == 0){
+    return OL;
+  } else if (strncmp(name, "/ol", HTML_BALISE_LEN) == 0){
+    return END_OL;
   } else if (strncmp(name, "ul", HTML_BALISE_LEN) == 0){
     return UL;
+  } else if (strncmp(name, "/ul", HTML_BALISE_LEN) == 0){
+    return END_UL;
   } else if (strncmp(name, "li", HTML_BALISE_LEN) == 0){
     return LI;
+  } else if (strncmp(name, "/li", HTML_BALISE_LEN) == 0){
+    return END_LI;
+  } else if (strncmp(name, "img", HTML_BALISE_LEN) == 0){
+    return IMG;
+  } else if (strncmp(name, "/img", HTML_BALISE_LEN) == 0){
+    return END_IMG;
+  } else if (strncmp(name, "blockquote", HTML_BALISE_LEN) == 0){
+    return BLOCKQUOTE;
+  } else if (strncmp(name, "/blockquote", HTML_BALISE_LEN) == 0){
+    return END_BLOCKQUOTE;
+  } else if (strncmp(name, "code", HTML_BALISE_LEN) == 0){
+    return CODE;
+  } else if (strncmp(name, "/code", HTML_BALISE_LEN) == 0){
+    return END_CODE;
   } else if (strncmp(name, "h1", HTML_BALISE_LEN) == 0){
     return H1;
   } else if (strncmp(name, "h2", HTML_BALISE_LEN) == 0){
@@ -162,6 +198,30 @@ TokenType token_by_name(const char name[HTML_BALISE_LEN]){
     return H5;
   } else if (strncmp(name, "h6", HTML_BALISE_LEN) == 0){
     return H6;
+  } else if (strncmp(name, "table", HTML_BALISE_LEN) == 0){
+    return TABLE;
+  } else if (strncmp(name, "/table", HTML_BALISE_LEN) == 0){
+    return END_TABLE;
+  } else if (strncmp(name, "thead", HTML_BALISE_LEN) == 0){
+    return THEAD;
+  } else if (strncmp(name, "/thead", HTML_BALISE_LEN) == 0){
+    return END_THEAD;
+  } else if (strncmp(name, "tbody", HTML_BALISE_LEN) == 0){
+    return TBODY;
+  } else if (strncmp(name, "/tbody", HTML_BALISE_LEN) == 0){
+    return END_TBODY;
+  } else if (strncmp(name, "tr", HTML_BALISE_LEN) == 0){
+    return TR;
+  } else if (strncmp(name, "/tr", HTML_BALISE_LEN) == 0){
+    return END_TR;
+  } else if (strncmp(name, "th", HTML_BALISE_LEN) == 0){
+    return TH;
+  } else if (strncmp(name, "/th", HTML_BALISE_LEN) == 0){
+    return END_TH;
+  } else if (strncmp(name, "progress", HTML_BALISE_LEN) == 0){
+    return PROGRESS;
+  } else if (strncmp(name, "/progress", HTML_BALISE_LEN) == 0){
+    return END_PROGRESS;
   }
 
   return DONT_CARE;
