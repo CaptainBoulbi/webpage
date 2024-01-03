@@ -17,64 +17,13 @@ Cursor prev = {
   .offset = -2,
 };
 
+TokenType token_by_name(const char name[HTML_BALISE_LEN]);
+
 void printtoken(Token* token){
   if (token == NULL){
     puts("NULL TOKEN");
     return;
   }
-
-  #if 0
-  switch (token->type) {
-    case UNDEFINED_TYPE:
-      printf("UNDEFINED_TYPE: ");
-      break;
-    case DONT_CARE:
-      printf("DONT_CARE: ");
-      break;
-    case TEXT:
-      printf("TEXT: ");
-      break;
-    case BODY:
-      printf("BODY: ");
-      break;
-    case END_BODY:
-      printf("END_BODY: ");
-      break;
-    case A:
-      printf("A: ");
-      break;
-    case END_A:
-      printf("END_A: ");
-      break;
-    case UL:
-      printf("UL: ");
-      break;
-    case LI:
-      printf("LI: ");
-      break;
-    case H1:
-      printf("H1: ");
-      break;
-    case H2:
-      printf("H2: ");
-      break;
-    case H3:
-      printf("H3: ");
-      break;
-    case H4:
-      printf("H4: ");
-      break;
-    case H5:
-      printf("H5: ");
-      break;
-    case H6:
-      printf("H6: ");
-      break;
-    default:
-      printf("ERROR: UNKNOWN TOKEN: ");
-      break;
-  }
-  #endif
 
   printf("%d: ", token->type);
 
@@ -127,6 +76,112 @@ void go_back(void){
     puts("ERROR: go way too back.");
     exit(1);
   }
+}
+
+char* getParam(const char* word, int len, char* cursor, int* size){
+  do {
+    int succes = 0;
+    for (int i=0; i<len; i++){
+      if (word[i] == *cursor){
+        cursor = nextchar();
+      } else {
+        succes = -1;
+        break;
+      }
+    }
+
+    if (succes != -1){
+      printf("get %s param: ", word);
+      *size = 0;
+      cursor = nextchar();
+      do {
+        printf("%c", *cursor);
+        (*size)++;
+      } while (*cursor != '"');
+      printf(".\n");
+    }
+
+    cursor = nextchar();
+  } while (*cursor != '>');
+  return NULL;
+}
+
+Token* create_text_token(Token* token, char* cursor){
+  int i = 0;
+
+  do {
+    cursor = nextchar();
+    i++;
+  } while (*cursor != '<');
+  go_back();
+
+  token = malloc(sizeof(Token));
+  token->type = TEXT;
+  token->value = "TODO";
+  token->len = i;
+
+  return token;
+}
+
+Token* create_balise_token(Token* token, char* cursor){
+  char balise[HTML_BALISE_LEN] = {0};
+  int len = 0;
+
+  cursor = nextchar();
+  while (*cursor != '>' && *cursor != ' ' && *cursor != '\n' && *cursor != '\t' && len < HTML_BALISE_LEN){
+    balise[len] = *cursor;
+    len++;
+    cursor = nextchar();
+  }
+
+  token = malloc(sizeof(Token));
+  token->type = token_by_name(balise);
+  token->len = len;
+  token->value = NULL;
+
+  go_back();
+  /*
+  if (token->type == A){
+    token->value = getParam("href", sizeof("href"), cursor, &token->len);
+  } else if (token->type == IMG){
+    /*
+    int len, srclen, altlen;
+    char* src = getParam("src", sizeof("src"), cursor, &srclen);
+    char* alt = getParam("alt", sizeof("alt"), cursor, &altlen);
+    len = srclen + altlen;
+
+    token->value = malloc(sizeof(char) * (len + 1));
+    strncat(token->value, src, srclen);
+    strncpy(token->value + srclen + 1, alt, altlen);
+    */
+  //}
+  //go_back();
+
+  do {
+    cursor = nextchar();
+  } while (*cursor != '>');
+
+  return token;
+}
+
+Token* nexttoken(void){
+  Token* token = NULL;
+  static char* cursor = NULL;
+  cursor = nextchar();
+
+  if (cursor == NULL) return NULL;
+
+  while (*cursor == '\0' || *cursor == ' ' || *cursor == '\n' || *cursor == '\t'){
+    cursor = nextchar();
+  }
+
+  if (*cursor != '<'){
+    token = create_text_token(token, cursor);
+  } else if (*cursor == '<'){
+    token = create_balise_token(token, cursor);
+  }
+
+  return token;
 }
 
 TokenType token_by_name(const char name[HTML_BALISE_LEN]){
@@ -225,104 +280,4 @@ TokenType token_by_name(const char name[HTML_BALISE_LEN]){
   }
 
   return DONT_CARE;
-}
-
-char* getParam(const char* word, int len, char* cursor, int* size){
-  do {
-    int succes = 0;
-    for (int i=0; i<len; i++){
-      if (word[i] == *cursor){
-        cursor = nextchar();
-      } else {
-        succes = -1;
-        break;
-      }
-    }
-
-    if (succes != -1){
-      printf("get %s param: ", word);
-      *size = 0;
-      cursor = nextchar();
-      do {
-        printf("%c", *cursor);
-        (*size)++;
-      } while (*cursor != '"');
-      printf(".\n");
-    }
-  } while (*cursor != '>');
-  return NULL;
-}
-
-Token* create_text_token(Token* token, char* cursor){
-  int i = 0;
-
-  do {
-    cursor = nextchar();
-    i++;
-  } while (*cursor != '<');
-  go_back();
-
-  token = malloc(sizeof(Token));
-  token->type = TEXT;
-  token->value = "TODO";
-  token->len = i;
-
-  return token;
-}
-
-Token* create_balise_token(Token* token, char* cursor){
-  char balise[HTML_BALISE_LEN] = {0};
-  int len = 0;
-
-  cursor = nextchar();
-  while (*cursor != '>' && *cursor != ' ' && *cursor != '\n' && *cursor != '\t' && len < HTML_BALISE_LEN){
-    balise[len] = *cursor;
-    len++;
-    cursor = nextchar();
-  }
-
-  token = malloc(sizeof(Token));
-  token->type = token_by_name(balise);
-  token->len = len;
-  token->value = NULL;
-
-  go_back();
-  if (token->type == A){
-    token->value = getParam("href", sizeof("href"), cursor, &token->len);
-  } else if (token->type == IMG){
-    int len, srclen, altlen;
-    char* src = getParam("src", sizeof("src"), cursor, &srclen);
-    char* alt = getParam("alt", sizeof("alt"), cursor, &altlen);
-    len = srclen + altlen;
-
-    token->value = malloc(sizeof(char) * (len + 1));
-    strncat(token->value, src, srclen);
-    strncpy(token->value + srclen + 1, alt, altlen);
-  }
-
-  do {
-    cursor = nextchar();
-  } while (*cursor != '>');
-
-  return token;
-}
-
-Token* nexttoken(void){
-  Token* token = NULL;
-  static char* cursor = NULL;
-  cursor = nextchar();
-
-  if (cursor == NULL) return NULL;
-
-  while (*cursor == '\0' || *cursor == ' ' || *cursor == '\n' || *cursor == '\t'){
-    cursor = nextchar();
-  }
-
-  if (*cursor != '<'){
-    token = create_text_token(token, cursor);
-  } else if (*cursor == '<'){
-    token = create_balise_token(token, cursor);
-  }
-
-  return token;
 }
