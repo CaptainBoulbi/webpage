@@ -15,11 +15,13 @@ void print_text(const char* text, int len){
   for (int i=0; i<len; i++){
     if (state.beginLine) printf("\n");
 
-    printf("%c", text[i]);
-    state.y++;
-    state.beginLine = 0;
+    if (text[i] != '\n'){
+      printf("%c", text[i]);
+      state.y++;
+      state.beginLine = 0;
+    }
 
-    if (state.y >= PAGE_WIDTH || text[i] == '\n'){
+    if (!state.beginLine && (state.y >= PAGE_WIDTH || text[i] == '\n')){
       state.y = 0;
       state.x++;
       state.beginLine = 1;
@@ -127,5 +129,14 @@ void evaluate(Token* token){
     printf(FC_nUDL);
     break_line();
     print_text(EXPAND_LIT("-------------------------------------------------------------------------------"));
+  }
+  else if (token->type == BLOCKQUOTE)
+  {
+    print_text(EXPAND_LIT("    "));
+    printf(FC_SWAP);
+  }
+  else if (token->type == END_BLOCKQUOTE)
+  {
+    printf(FC_nSWAP);
   }
 }

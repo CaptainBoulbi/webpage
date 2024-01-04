@@ -8,6 +8,8 @@ int main(int argc, char* argv[]){
   getUserConfig(argc, argv);
   getPage();
 
+  //printPage();
+
   Token* token = NULL;
   do {
     token = nexttoken();
