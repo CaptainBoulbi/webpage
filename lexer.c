@@ -1,6 +1,4 @@
 #include "lexer.h"
-#include <stdlib.h>
-#include <string.h>
 
 #define HTML_BALISE_LEN 12
 #define DA_LEN 64
@@ -173,7 +171,6 @@ Token* create_balise_token(Token* token, char* cursor){
     char* alt = getParam("alt", sizeof("alt"), cursor, &altlen);
     totallen = srclen * altlen + 1;
 
-    printf("IMG: src = '%s', alt = '%s'.\n", src, alt);
     token->value = malloc(sizeof(char) * (totallen));
     strncpy(token->value, src, srclen);
     token->value[srclen-1] = ' ';
@@ -224,6 +221,10 @@ TokenType token_by_name(const char name[HTML_BALISE_LEN]){
     return END_BODY;
   } else if (strncmp(name, "/html", HTML_BALISE_LEN) == 0){
     return END_HTML;
+  } else if (strncmp(name, "title", HTML_BALISE_LEN) == 0){
+    return TITLE;
+  } else if (strncmp(name, "/title", HTML_BALISE_LEN) == 0){
+    return END_TITLE;
   } else if (strncmp(name, "em", HTML_BALISE_LEN) == 0){
     return EM;
   } else if (strncmp(name, "/em", HTML_BALISE_LEN) == 0){
@@ -244,6 +245,8 @@ TokenType token_by_name(const char name[HTML_BALISE_LEN]){
     return HR;
   } else if (strncmp(name, "br", HTML_BALISE_LEN) == 0){
     return BR;
+  } else if (strncmp(name, "/p", HTML_BALISE_LEN) == 0){
+    return END_P;
   } else if (strncmp(name, "a", HTML_BALISE_LEN) == 0){
     return A;
   } else if (strncmp(name, "/a", HTML_BALISE_LEN) == 0){
@@ -283,6 +286,18 @@ TokenType token_by_name(const char name[HTML_BALISE_LEN]){
   } else if (strncmp(name, "h5", HTML_BALISE_LEN) == 0){
     return H5;
   } else if (strncmp(name, "h6", HTML_BALISE_LEN) == 0){
+    return H6;
+  } else if (strncmp(name, "/h1", HTML_BALISE_LEN) == 0){
+    return END_H1;
+  } else if (strncmp(name, "/h2", HTML_BALISE_LEN) == 0){
+    return END_H2;
+  } else if (strncmp(name, "/h3", HTML_BALISE_LEN) == 0){
+    return END_H3;
+  } else if (strncmp(name, "/h4", HTML_BALISE_LEN) == 0){
+    return END_H4;
+  } else if (strncmp(name, "/h5", HTML_BALISE_LEN) == 0){
+    return END_H5;
+  } else if (strncmp(name, "/h6", HTML_BALISE_LEN) == 0){
     return H6;
   } else if (strncmp(name, "table", HTML_BALISE_LEN) == 0){
     return TABLE;

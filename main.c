@@ -1,6 +1,7 @@
 #include "config.h"
 #include "page.h"
 #include "lexer.h"
+#include "eval.h"
 
 int main(int argc, char* argv[]){
 
@@ -10,9 +11,10 @@ int main(int argc, char* argv[]){
   Token* token = NULL;
   do {
     token = nexttoken();
-    printtoken(token);
-    //evaluate(token);
+    evaluate(token);
   } while (token != NULL && token->type != END_HTML);
+
+  printf("\n");
 
   return 0;
 }
