@@ -1,6 +1,9 @@
 #include "lexer.h"
+#include <stdlib.h>
+#include <string.h>
 
 #define HTML_BALISE_LEN 12
+#define DA_LEN 64
 
 typedef struct Cursor {
   int chunk;
@@ -100,17 +103,21 @@ char* getParam(const char* word, int len, char* cursor, int* size){
         cursor = nextchar();
       }
 
-      char* begin = nextchar();
+      int cap = DA_LEN;
+      res = malloc(sizeof(char) * cap);
       *size = 0;
 
       do {
         cursor = nextchar();
+        res[*size] = *cursor;
         (*size)++;
+        if (*size >= cap){
+          cap *= 2;
+          res = realloc(res, cap);
+        }
       } while (*cursor != '"');
 
-      res = malloc(sizeof(char) * ((*size)+1));
-      strncpy(res, begin, *size);
-      res[*size] = '\0';
+      res[*size-1] = '\0';
 
       break;
     }
@@ -153,18 +160,21 @@ Token* create_balise_token(Token* token, char* cursor){
 
   if (token->type == A){
     token->value = getParam("href", sizeof("href"), cursor, &token->len);
-  } /*else if (token->type == IMG){
-    int len, srclen, altlen;
+  } else if (token->type == IMG) {
+    int srclen, altlen, totallen;
     char* src = getParam("src", sizeof("src"), cursor, &srclen);
     char* alt = getParam("alt", sizeof("alt"), cursor, &altlen);
-    len = srclen + altlen;
+    totallen = srclen * altlen + 1;
 
-    token->value = malloc(sizeof(char) * (len + 1));
-    strncat(token->value, src, srclen);
-    strncpy(token->value + srclen + 1, alt, altlen);
-  }*/
-  //go_back();
-  else {
+    printf("IMG: src = '%s', alt = '%s'.\n", src, alt);
+    token->value = malloc(sizeof(char) * (totallen));
+    strncpy(token->value, src, srclen);
+    token->value[srclen-1] = ' ';
+    strncpy(token->value+srclen, alt, altlen);
+    token->value[totallen] = '\0';
+    token->len = totallen;
+
+  } else {
     token->value = malloc(sizeof(char) * len);
     strncpy(token->value, balise, len+1);
     token->len = len;
