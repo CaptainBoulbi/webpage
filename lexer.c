@@ -128,18 +128,25 @@ char* getParam(const char* word, int len, char* cursor, int* size){
 }
 
 Token* create_text_token(Token* token, char* cursor){
-  int i = 0;
+  token = malloc(sizeof(Token));
+  token->value = malloc(sizeof(char) * DA_LEN);
+  int i = 0, cap = DA_LEN;
 
+  go_back();
   do {
     cursor = nextchar();
+    token->value[i] = *cursor;
     i++;
+    if (i >= cap){
+      cap *= 2;
+      token->value = realloc(token->value, cap);
+    }
   } while (*cursor != '<');
+  token->value[i-1] = '\0';
   go_back();
 
-  token = malloc(sizeof(Token));
   token->type = TEXT;
-  token->value = "TODO";
-  token->len = i;
+  token->len = i-1;
 
   return token;
 }
