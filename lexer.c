@@ -245,6 +245,8 @@ TokenType token_by_name(const char name[HTML_BALISE_LEN]){
     return HR;
   } else if (strncmp(name, "br", HTML_BALISE_LEN) == 0){
     return BR;
+  } else if (strncmp(name, "p", HTML_BALISE_LEN) == 0){
+    return P;
   } else if (strncmp(name, "/p", HTML_BALISE_LEN) == 0){
     return END_P;
   } else if (strncmp(name, "a", HTML_BALISE_LEN) == 0){

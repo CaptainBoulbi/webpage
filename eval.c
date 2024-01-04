@@ -3,6 +3,8 @@
 #include "lexer.h"
 #include "form.h"
 
+// TODO: BLOCKQUOTE OL PROGRESS CODE TABLE
+
 #define PAGE_WIDTH 80
 
 #define EXPAND_LIT(x) x, sizeof(x)
@@ -45,8 +47,15 @@ void evaluate(Token* token){
     printf(FC_nBOLD);
     break_line();
   }
+  else if (token->type == UL){
+    state.inList = 1;
+  }
+  else if (token->type == UL){
+    state.inList = 0;
+  }
   else if (token->type == LI)
   {
+    break_line();
     print_text(EXPAND_LIT("- "));
   }
   else if (token->type == END_LI)
@@ -91,6 +100,10 @@ void evaluate(Token* token){
   {
     printf(FC_nUDL);
     print_text(EXPAND_LIT(" "));
+  }
+  else if (token->type == P)
+  {
+    if (!state.inList) break_line();
   }
   else if (token->type == END_P)
   {

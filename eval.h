@@ -8,6 +8,7 @@ typedef struct PageState {
   int x;
   int y;
   int beginLine;
+  int inList;
 } PageState;
 
 void evaluate(Token* token);
